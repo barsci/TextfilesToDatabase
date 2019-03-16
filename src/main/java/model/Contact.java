@@ -2,7 +2,7 @@ package model;
 
 public class Contact {
 
-    int id;
+    private long id;
     private ContactType contactType;
     private String contact;
 
@@ -34,7 +34,6 @@ public class Contact {
     public String toString() {
         return "Contact{" +
                 "contactType=" + contactType +
-                ", contact='" + contact + '\'' +
-                '}';
+                ", contact='" + contact + '}';
     }
 }

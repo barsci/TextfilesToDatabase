@@ -3,11 +3,11 @@ package model;
 import java.util.List;
 
 public class Customer {
-    int id;
-    String name;
-    String surname;
-    String age;
-    List<Contact> contacts;
+    private long id;
+    private String name;
+    private String surname;
+    private String age;
+    private List<Contact> contacts;
 
     public Customer(){
 
