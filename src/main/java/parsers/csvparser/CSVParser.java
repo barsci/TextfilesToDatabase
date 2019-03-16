@@ -31,11 +31,7 @@ public class CSVParser {
                 contactList = new ArrayList<>();
                 customer.setName(data[0]);
                 customer.setSurname(data[1]);
-                if (!data[2].equals("")) {
-                    customer.setAge(Integer.valueOf(data[2]));
-                } else {
-                    customer.setAge(0);
-                }
+                if(!data[2].isEmpty()) customer.setAge(data[2]);
                 for(int i=4; i<data.length; i++) {
                     Contact contact = contactMatcher.matchContact(data[i]);
                     contactList.add(contact);

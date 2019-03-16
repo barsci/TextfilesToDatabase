@@ -7,6 +7,11 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,17 +22,30 @@ public class XMLParser extends DefaultHandler {
     private List<Contact> contactList;
     private StringBuilder data;
 
+    private boolean bName = false;
+    private boolean bSurname = false;
+    private boolean bAge = false;
+    private boolean bEmail = false;
+    private boolean bPhone = false;
+    private boolean bJabber = false;
+    private boolean bUnknown = false;
+
+    public XMLParser() {
+    }
+
+    public void parseXML(File file) {
+        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        try {
+            SAXParser saxParser = saxParserFactory.newSAXParser();
+            saxParser.parse(file, this);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public List<Customer> getCustomerList() {
         return customerList;
     }
-
-    boolean bName = false;
-    boolean bSurname = false;
-    boolean bAge = false;
-    boolean bEmail = false;
-    boolean bPhone = false;
-    boolean bJabber = false;
-    boolean bUnknown = false;
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -47,34 +65,45 @@ public class XMLParser extends DefaultHandler {
             bEmail = true;
         } else if (qName.equalsIgnoreCase("jabber")) {
             bJabber = true;
+        } else if (qName.equalsIgnoreCase("persons")) {
+        } else if (qName.equalsIgnoreCase("city")) {
+        } else if (qName.equalsIgnoreCase("contacts")) {
+        } else {
+            bUnknown = true;
         }
 
         data = new StringBuilder();
     }
 
     @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        data.append(new String(ch, start, length));
+    }
+
+    @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
+        String result = data.toString();
 
         if (bName) {
-            customer.setName(data.toString());
+            customer.setName(result);
             bName = false;
         } else if (bSurname) {
-            customer.setSurname(data.toString());
+            customer.setSurname(result);
             bSurname = false;
         } else if (bAge) {
-            customer.setAge(Integer.valueOf(data.toString()));
+            customer.setAge(result);
             bAge = false;
         } else if (bEmail) {
-            contactList.add(new Contact(ContactType.EMAIL, data.toString()));
+            contactList.add(new Contact(ContactType.EMAIL, result));
             bEmail = false;
         } else if (bPhone) {
-            contactList.add(new Contact(ContactType.PHONE, data.toString()));
+            contactList.add(new Contact(ContactType.PHONE, result));
             bPhone = false;
         } else if (bJabber) {
-            contactList.add(new Contact(ContactType.JABBER, data.toString()));
+            contactList.add(new Contact(ContactType.JABBER, result));
             bJabber = false;
         } else if (bUnknown) {
-            contactList.add(new Contact(ContactType.UNKNOWN, data.toString()));
+            contactList.add(new Contact(ContactType.UNKNOWN, result));
             bUnknown = false;
         }
 
@@ -82,10 +111,5 @@ public class XMLParser extends DefaultHandler {
             customer.setContacts(contactList);
             customerList.add(customer);
         }
-    }
-
-    @Override
-    public void characters(char[] ch, int start, int length) throws SAXException {
-        data.append(new String(ch, start, length));
     }
 }

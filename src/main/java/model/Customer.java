@@ -6,14 +6,14 @@ public class Customer {
     int id;
     String name;
     String surname;
-    int age;
+    String age;
     List<Contact> contacts;
 
     public Customer(){
 
     }
 
-    public Customer(String name, String surname, int age, List<Contact> contacts) {
+    public Customer(String name, String surname, String age, List<Contact> contacts) {
         this.name = name;
         this.surname = surname;
         this.age = age;
@@ -36,11 +36,11 @@ public class Customer {
         this.surname = surname;
     }
 
-    public int getAge() {
+    public String getAge() {
         return age;
     }
 
-    public void setAge(int age) {
+    public void setAge(String age) {
         this.age = age;
     }
 
