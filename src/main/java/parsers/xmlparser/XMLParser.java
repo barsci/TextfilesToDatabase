@@ -41,8 +41,9 @@ public class XMLParser extends DefaultHandler {
         try {
             SAXParser saxParser = saxParserFactory.newSAXParser();
             saxParser.parse(file, this);
+            System.out.println("parsed file "+file.getPath());
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            e.printStackTrace();
+            System.out.println("omitting file "+file.getPath());
         }
     }
 
