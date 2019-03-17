@@ -17,12 +17,14 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String pathname = scanner.nextLine();
         File file = new File(pathname);
+        DBConnection dbConnection = DBConnection.getInstance();
         try {
-            DBConnection dbConnection = DBConnection.getInstance();
             if(pathname.endsWith(".xml")) {
+                dbConnection.setDatabaseConnection();
                 XMLParser xmlParser = new XMLParser(dbConnection);
                 xmlParser.parseXML(file);
             } else if (pathname.endsWith(".txt")){
+                dbConnection.setDatabaseConnection();
                 CSVParser csvParser = new CSVParser(dbConnection);
                 csvParser.parse(file);
                 System.out.println("csv");

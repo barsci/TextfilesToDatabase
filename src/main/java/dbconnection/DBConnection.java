@@ -3,26 +3,49 @@ package dbconnection;
 import model.Contact;
 import model.Customer;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class DBConnection implements DatabaseOperations{
+    private static final String filename = "db.properties";
     private Connection con;
     private static DBConnection dbConnection;
     private List<Customer> customerList = new ArrayList<>();
     private int recordCount = 0;
 
-    private DBConnection() throws SQLException{
-        con = DriverManager.getConnection("jdbc:mysql://localhost/from_textfile?serverTimezone=Europe/Warsaw" +
-                "&useSSL=False", "user", "password");
+    private DBConnection() {
     }
 
-    public static DBConnection getInstance() throws SQLException {
+    public static DBConnection getInstance() {
         if(dbConnection == null){
             dbConnection = new DBConnection();
         }
         return dbConnection;
+    }
+
+    public void setDatabaseConnection() throws SQLException{
+        Properties properties = new Properties();
+        try {
+            InputStream inputStream = DBConnection.class.getClassLoader().getResourceAsStream(filename);
+            properties.load(inputStream);
+
+            String url = properties.getProperty("jdbc.url");
+            String username = properties.getProperty("jdbc.username");
+            String password = properties.getProperty("jdbc.password");
+
+            con = DriverManager.getConnection(url, username, password);
+            if(inputStream!=null) {
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            System.out.println("Cannot set connection config to database!");
+        }
     }
 
     public void closeConnection() throws SQLException {
