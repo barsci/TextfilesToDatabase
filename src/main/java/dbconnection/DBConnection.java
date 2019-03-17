@@ -1,7 +1,10 @@
 package dbconnection;
 
+import javafx.application.Platform;
+import javafx.scene.control.Label;
 import model.Contact;
 import model.Customer;
+import view.GuiFileChooser;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,6 +21,8 @@ public class DBConnection implements DatabaseOperations{
     private static DBConnection dbConnection;
     private List<Customer> customerList = new ArrayList<>();
     private int recordCount = 0;
+    private int overallCount=0;
+    private Label label;
 
     private DBConnection() {
     }
@@ -53,11 +58,11 @@ public class DBConnection implements DatabaseOperations{
     }
 
     public void write(Customer customer) throws SQLException{
-
         recordCount += customer.getSize();
         customerList.add(customer);
 
-        if(recordCount>1000) {
+        if(recordCount>100) {
+            overallCount += recordCount;
             pushCustomerListToDatabase();
             customerList = new ArrayList<>();
             recordCount=0;
@@ -66,8 +71,9 @@ public class DBConnection implements DatabaseOperations{
 
     public void eof() throws SQLException{
         if(customerList.size()!=0) {
+            overallCount += customerList.size();
             pushCustomerListToDatabase();
-            closeConnection();
+            customerList = new ArrayList<>();
         }
     }
 
@@ -103,5 +109,10 @@ public class DBConnection implements DatabaseOperations{
             }
         }
         contactStatement.executeBatch();
+        Platform.runLater(() -> this.label.setText("Inserted "+ overallCount +" records!"));
+    }
+
+    public void setLabel(Label label) {
+        this.label = label;
     }
 }
