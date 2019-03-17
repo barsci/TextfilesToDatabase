@@ -1,5 +1,6 @@
 package parsers.csvparser;
 
+import dbconnection.DatabaseOperations;
 import model.Contact;
 import model.Customer;
 
@@ -7,16 +8,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CSVParser {
 
     private Customer customer;
-    private List<Customer> customerList = new ArrayList<>();
     private List<Contact> contactList;
+    private DatabaseOperations databaseOperations;
 
-    public CSVParser() {
+    public CSVParser(DatabaseOperations databaseOperations) {
+        this.databaseOperations=databaseOperations;
     }
 
     public void parse(File file){
@@ -37,14 +40,11 @@ public class CSVParser {
                     contactList.add(contact);
                 }
                 customer.setContacts(contactList);
-                customerList.add(customer);
+                databaseOperations.write(customer);
             }
-        } catch (IOException e) {
+            databaseOperations.eof();
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public List<Customer> getCustomerList() {
-        return customerList;
     }
 }

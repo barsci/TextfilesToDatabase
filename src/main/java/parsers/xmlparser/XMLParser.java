@@ -1,5 +1,6 @@
 package parsers.xmlparser;
 
+import dbconnection.DatabaseOperations;
 import model.Contact;
 import model.ContactType;
 import model.Customer;
@@ -12,15 +13,16 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class XMLParser extends DefaultHandler {
 
     private Customer customer;
-    private List<Customer> customerList = new ArrayList<>();
     private List<Contact> contactList;
     private StringBuilder data;
+    private DatabaseOperations databaseOperations;
 
     private boolean bName = false;
     private boolean bSurname = false;
@@ -30,7 +32,8 @@ public class XMLParser extends DefaultHandler {
     private boolean bJabber = false;
     private boolean bUnknown = false;
 
-    public XMLParser() {
+    public XMLParser(DatabaseOperations databaseOperations) {
+        this.databaseOperations=databaseOperations;
     }
 
     public void parseXML(File file) {
@@ -41,10 +44,6 @@ public class XMLParser extends DefaultHandler {
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public List<Customer> getCustomerList() {
-        return customerList;
     }
 
     @Override
@@ -109,7 +108,18 @@ public class XMLParser extends DefaultHandler {
 
         if (qName.equalsIgnoreCase("person")) {
             customer.setContacts(contactList);
-            customerList.add(customer);
+            try {
+                databaseOperations.write(customer);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (qName.equalsIgnoreCase("persons")) {
+            try {
+                databaseOperations.eof();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
