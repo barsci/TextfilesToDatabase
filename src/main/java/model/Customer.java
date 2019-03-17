@@ -40,6 +40,10 @@ public class Customer {
         return age;
     }
 
+    public int getSize() {
+        return 1+contacts.size();
+    }
+
     public void setAge(String age) {
         this.age = age;
     }
