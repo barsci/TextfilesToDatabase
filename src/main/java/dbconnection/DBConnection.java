@@ -34,34 +34,31 @@ public class DBConnection implements DatabaseOperations{
         return dbConnection;
     }
 
-    public void setDatabaseConnection() throws SQLException{
+    public void setDatabaseConnection() throws SQLException, IOException {
         Properties properties = new Properties();
-        try {
-            InputStream inputStream = DBConnection.class.getClassLoader().getResourceAsStream(filename);
-            properties.load(inputStream);
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
+        properties.load(inputStream);
 
-            String url = properties.getProperty("jdbc.url");
-            String username = properties.getProperty("jdbc.username");
-            String password = properties.getProperty("jdbc.password");
+        String url = properties.getProperty("jdbc.url");
+        String username = properties.getProperty("jdbc.username");
+        String password = properties.getProperty("jdbc.password");
 
-            con = DriverManager.getConnection(url, username, password);
-            if(inputStream!=null) {
-                inputStream.close();
-            }
-        } catch (IOException e) {
-            System.out.println("Cannot set connection config to database!");
+        con = DriverManager.getConnection(url, username, password);
+        if(inputStream!=null) {
+            inputStream.close();
         }
     }
 
     public void closeConnection() throws SQLException {
         con.close();
+        overallCount=0;
     }
 
     public void write(Customer customer) throws SQLException{
         recordCount += customer.getSize();
         customerList.add(customer);
 
-        if(recordCount>100) {
+        if(recordCount>1000) {
             overallCount += recordCount;
             pushCustomerListToDatabase();
             customerList = new ArrayList<>();
@@ -105,7 +102,6 @@ public class DBConnection implements DatabaseOperations{
                     contactStatement.setString(3, contact.getContact());
                     contactStatement.addBatch();
                 }
-                System.out.println(refKey);
             }
         }
         contactStatement.executeBatch();

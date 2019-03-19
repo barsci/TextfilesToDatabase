@@ -8,6 +8,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -21,6 +22,7 @@ import parsers.csvparser.CSVParser;
 import parsers.xmlparser.XMLParser;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,8 @@ public final class GuiFileChooser extends Application {
     private List<File> fileList;
     private final Label logLabel = new Label();
     private final Label numberOfInsertedFilesLabel = new Label();
+    private final TextField textField = new TextField();
+    private final Button saveButton =  new Button("Save to database");
 
     @Override
     public void start(final Stage stage) {
@@ -40,71 +44,51 @@ public final class GuiFileChooser extends Application {
                 new FileChooser.ExtensionFilter("Text files (*.txt, *.csv, *.xml)", "*.txt","*.xml","*.csv");
         fileChooser.getExtensionFilters().add(textFilter);
 
-        final Label label = new Label("Choose file(s) you want to store in database!");
-        final TextField textField = new TextField();
-        final Button openMultipleButton = new Button("..");
-        final Button saveButton = new Button("Save to database");
+        final Label infoLabel = new Label("Choose file(s) you want to store in database!");
+        final Button openMultipleButton = new Button("Choose files...");
         saveButton.setDisable(true);
-        final Button exitButton = new Button("Close app");
+        textField.setDisable(true);
 
-
-        openMultipleButton.setOnAction(
-                new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(final ActionEvent e) {
-                        textField.clear();
-                        fileList = fileChooser.showOpenMultipleDialog(stage);
-                        if (fileList != null) {
-                            for(File file : fileList) {
-                                textField.appendText(file.getName()+ "; ");
-                            }
-                            saveButton.setDisable(false);
-                        }
-                    }
-                });
-
-        saveButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                textField.clear();
-                logLabel.setText("");
-                Task task = new Task<Void>() {
-                    @Override
-                    public Void call() {
-                        passFilesToDatabase(fileList);
-                        return null;
-                    }
-                };
-                new Thread(task).start();
+        openMultipleButton.setOnAction( (event) -> {
+            textField.clear();
+            fileList = fileChooser.showOpenMultipleDialog(stage);
+            if (fileList != null) {
+                textField.setText(fileList.size() + " file(s) chosen.");
+                saveButton.setDisable(false);
             }
         });
 
-        exitButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                stage.close();
-            }
+        saveButton.setOnAction( (event) -> {
+            textField.clear();
+            logLabel.setText("");
+            Task task = new Task<Void>() {
+                @Override
+                public Void call() {
+                    passFilesToDatabase(fileList);
+                    saveButton.setDisable(true);
+                    return null;
+                }
+            };
+            new Thread(task).start();
         });
 
         final GridPane inputGridPane = new GridPane();
-        final HBox hBoxButtons = new HBox(10);
+        final HBox hBoxButtons = new HBox(30);
         final VBox logBox = new VBox();
 
-        GridPane.setConstraints(label, 0, 0);
+        GridPane.setConstraints(infoLabel, 0, 0);
         GridPane.setConstraints(textField, 0, 1);
-        GridPane.setConstraints(openMultipleButton, 1, 1);
-        inputGridPane.setHgap(6);
         inputGridPane.setVgap(6);
-        inputGridPane.getChildren().addAll(label, textField, openMultipleButton);
+        inputGridPane.getChildren().addAll(infoLabel, textField);
 
-        hBoxButtons.getChildren().addAll(saveButton, exitButton);
+        hBoxButtons.getChildren().addAll(saveButton, openMultipleButton);
         logBox.getChildren().addAll(logLabel,numberOfInsertedFilesLabel);
 
-        final Pane rootGroup = new VBox(12);
-        rootGroup.getChildren().addAll(inputGridPane,hBoxButtons,logBox);
-        rootGroup.setPadding(new Insets(12, 12, 12, 12));
+        final Pane pane = new VBox(12);
+        pane.getChildren().addAll(inputGridPane,hBoxButtons,logBox);
+        pane.setPadding(new Insets(12, 12, 12, 12));
 
-        stage.setScene(new Scene(rootGroup));
+        stage.setScene(new Scene(pane));
         stage.show();
     }
 
@@ -122,21 +106,25 @@ public final class GuiFileChooser extends Application {
                 if (file.getPath().endsWith(".xml")) {
                     XMLParser xmlParser = new XMLParser(dbConnection);
                     xmlParser.parseXML(file);
-                    System.out.println("xml");
-                } else if (file.getPath().endsWith(".txt") || file.getPath().endsWith(".csv")) {
+                }
+                if (file.getPath().endsWith(".txt") || file.getPath().endsWith(".csv")) {
                     CSVParser csvParser = new CSVParser(dbConnection);
                     csvParser.parse(file);
-                    System.out.println("csv");
-                } else {
-                    System.out.println("SELECT FILE WITH PROPER EXTENSION!");
                 }
                 Platform.runLater(() -> this.numberOfInsertedFilesLabel.setText("Inserted "+file.getName()));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException | IOException e) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Database connection error!");
+                alert.setContentText(e.getMessage());
+                alert.showAndWait();
+                saveButton.setDisable(true);
+            });
         } finally {
             try {
                 dbConnection.closeConnection();
+                textField.setText("Files inserted to database!");
             } catch (SQLException e ){
                 System.out.println("Error closing connection");
             }

@@ -10,7 +10,8 @@ public class CSVContactMatcher {
 
     private String emailMatcher = ".+@.+\\.\\w{2,3}";
     private String phoneMatcher = "(\\+48 )?\\d{3}[ -]?\\d{3}[ -]?\\d{3}";
-    private String jabberMatcher = "[a-zA-Z]+";
+    private String jabberMatcher = "[a-zA-Z]+[0-9]*";
+    private String customerNameMatcher = "[a-zA-Z]+";
     private Pattern pattern;
     private Matcher matcher;
 
@@ -38,5 +39,11 @@ public class CSVContactMatcher {
         }
 
         return new Contact(ContactType.UNKNOWN, str);
+    }
+
+    boolean customerNameSurnameCityMatcher(String toCheck) {
+        pattern = Pattern.compile(customerNameMatcher);
+        matcher = pattern.matcher(toCheck);
+        return matcher.matches();
     }
 }
